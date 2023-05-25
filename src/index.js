@@ -151,10 +151,10 @@ async (req, res) => {
 app.delete('/talker/:id', validateAuthentication, async (req, res) => {
   const talker = await readDoc();
   const { id } = req.params;
-  const del = talker.filter((e) => e.id !== Number(id));
-  fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(del));
+  const deleteTalker = talker.filter((e) => e.id !== Number(id));
+  fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(deleteTalker));
   return res.status(204).json({
-    del,
+    deleteTalker,
   });
 });
 
