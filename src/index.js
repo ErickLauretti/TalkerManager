@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');
+const { validadeInputs, validationCaracters } = require('./middlewares/middlewares');
 
 const app = express();
 app.use(express.json());
@@ -53,7 +54,7 @@ app.get('/talker/:id', async (req, res) => {
     });
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', validadeInputs, validationCaracters, (req, res) => {
   const { email, password } = req.body;
   const newToken = makeToken();
   const login = {
