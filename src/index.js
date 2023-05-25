@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');
 
@@ -26,6 +27,12 @@ const readDoc = async () => {
   }
 };
 
+const makeToken = () => {
+  const buffer = crypto.randomBytes(8);
+  const password = buffer.toString('hex');
+  return password;
+};
+
 app.get('/talker', async (_req, res) => {
   const talkers = await readDoc();
   if (talkers) {
@@ -44,4 +51,18 @@ app.get('/talker/:id', async (req, res) => {
     return res.status(404).json({
       message: 'Pessoa palestrante não encontrada',
     });
+});
+
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  const newToken = makeToken();
+  const login = {
+    email,
+    password,
+  };
+  if (login) {
+    return res.status(200).json({
+      token: newToken,
+    });
+  }
 });
