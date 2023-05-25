@@ -38,6 +38,19 @@ const readDoc = async () => {
   }
 };
 
+const validateTalker = async (req, res, next) => {
+  const talker = await readDoc();
+  const { id } = req.params;
+  const speaker = talker.find((e) => Number(id) === e.id);
+  if (!speaker) {
+    res.status(404).json({
+      message: 'Pessoa palestrante não encontrada',
+    });
+  } else {
+    next();
+  }
+};
+
 const makeToken = () => {
   const buffer = crypto.randomBytes(8);
   const password = buffer.toString('hex');
@@ -104,3 +117,37 @@ async (req, res) => {
   fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(talker));
   return res.status(201).json(newTalker);
 });
+
+app.put('/talker/:id',
+validateAuthentication,
+validateNameAndAge,
+validateName,
+validateAge,
+validateTalk,
+validateWatchedAt,
+validateRate,
+validateRateIsDecimal,
+validateTalker,
+async (req, res) => {
+  const talker = await readDoc();
+  const { id } = req.params;
+  const { name, age, talk: { watchedAt, rate } } = req.body;
+  const attTalkers = talker.map((talkers) => {
+    if (talkers.id === Number(id)) {
+      return { ...talkers,
+        name,
+        age,
+        talk: {
+          watchedAt,
+          rate,
+        } };
+    } return talkers;
+  });
+  fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(attTalkers));
+  const attTalker = attTalkers.find((e) => e.id === Number(id));
+  return res.status(200).json(attTalker);
+});
+
+module.exports = {
+  readDoc,
+};
