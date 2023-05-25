@@ -2,7 +2,17 @@ const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs/promises');
 const path = require('path');
-const { validadeInputs, validationCaracters } = require('./middlewares/middlewares');
+const {
+  validadeInputs,
+  validationCaracters,
+  validateAuthentication, 
+  validateNameAndAge,
+  validateName, 
+  validateAge, 
+  validateTalk, 
+  validateWatchedAt, 
+  validateRate, 
+  validateRateIsDecimal } = require('./middlewares/middlewares');
 
 const app = express();
 app.use(express.json());
@@ -66,4 +76,31 @@ app.post('/login', validadeInputs, validationCaracters, (req, res) => {
       token: newToken,
     });
   }
+});
+
+app.post('/talker',
+validateAuthentication,
+validateNameAndAge,
+validateName,
+validateAge,
+validateTalk,
+validateWatchedAt,
+validateRate,
+validateRateIsDecimal,
+async (req, res) => {
+  const talker = await readDoc();
+  const { name, age, talk: { watchedAt, rate } } = req.body;
+  const nextId = talker.length + 1;
+  const newTalker = {
+    id: nextId,
+    name,
+    age,
+    talk: {
+      watchedAt,
+      rate,
+    },
+  };
+  talker.push(newTalker);
+  fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(talker));
+  return res.status(201).json(newTalker);
 });
