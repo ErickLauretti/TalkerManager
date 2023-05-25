@@ -26,10 +26,22 @@ const readDoc = async () => {
   }
 };
 
-app.get('/talker', async (req, res) => {
+app.get('/talker', async (_req, res) => {
   const talkers = await readDoc();
   if (talkers) {
     return res.status(200).json(talkers);
   }
   return [];
+});
+
+app.get('/talker/:id', async (req, res) => {
+  const { id } = req.params;
+  const talker = await readDoc();
+  const findTalker = talker.find((e) => Number(id) === e.id);
+  if (findTalker) {
+    return res.status(200).json(findTalker);
+  }
+    return res.status(404).json({
+      message: 'Pessoa palestrante não encontrada',
+    });
 });
