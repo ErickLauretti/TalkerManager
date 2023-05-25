@@ -28,7 +28,7 @@ const readDoc = async () => {
 
 app.get('/talker', async (req, res) => {
   const talkers = await readDoc();
-  if(talkers) {
+  if (talkers) {
     return res.status(200).json(talkers);
   }
   return [];
