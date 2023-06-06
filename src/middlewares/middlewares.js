@@ -156,7 +156,7 @@ const validateRateIsDecimal = (req, res, next) => {
   }
 };
 
-const validateRateIsDecimalByBody = (req, res, next) => {
+const validateRateIsDecimalByBodys = (req, res, next) => {
   const { rate } = req.body;
   const inteiro = Number.isInteger(rate);
   const betweenOneAndFive = (rate >= 1 && rate <= 5);
@@ -182,5 +182,5 @@ module.exports = {
   validateRateIsDecimal,
   validateDate,
   validateRateByBody,
-  validateRateIsDecimalByBody,
+  validateRateIsDecimalByBodys,
 };

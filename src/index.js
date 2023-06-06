@@ -15,6 +15,7 @@ const {
   validateRateIsDecimal,
   validateRateByBody,
   validateRateIsDecimalByBody,
+  validateRateIsDecimalByBodys,
   } = require('./middlewares/middlewares');
 
 const app = express();
@@ -209,7 +210,7 @@ async (req, res) => {
 app.patch('/talker/rate/:id',
 validateAuthentication,
 validateRateByBody,
-validateRateIsDecimalByBody,
+validateRateIsDecimalByBodys,
 async (req, res) => {
   const talker = await readDoc();
   const { rate } = req.body;
