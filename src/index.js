@@ -14,7 +14,6 @@ const {
   validateRate, 
   validateRateIsDecimal,
   validateRateByBody,
-  validateRateIsDecimalByBody,
   validateRateIsDecimalByBodys,
   } = require('./middlewares/middlewares');
 
