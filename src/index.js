@@ -12,7 +12,10 @@ const {
   validateTalk, 
   validateWatchedAt, 
   validateRate, 
-  validateRateIsDecimal } = require('./middlewares/middlewares');
+  validateRateIsDecimal,
+  validateRateByBody,
+  validateRateIsDecimalByBody,
+  } = require('./middlewares/middlewares');
 
 const app = express();
 app.use(express.json());
@@ -29,13 +32,20 @@ app.listen(PORT, () => {
   console.log('Servidor up na porta 3001');
 });
 
+const CAMINHO = './talker.json';
+
 const readDoc = async () => {
   try {
-    const read = await fs.readFile(path.resolve(__dirname, './talker.json'), 'utf-8');
+    const read = await fs.readFile(path.resolve(__dirname, CAMINHO), 'utf-8');
     return JSON.parse(read);
   } catch (error) {
     console.error(error);
   }
+};
+
+const validateDate = (date) => {
+  const regex = /^(0[1-9]|[1-2]\d|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+  return regex.test(date);
 };
 
 const validateTalker = async (req, res, next) => {
@@ -51,6 +61,40 @@ const validateTalker = async (req, res, next) => {
   }
 };
 
+const validateRateByQuery = (req, res, next) => {
+  const { rate } = req.query;
+  const numero = Number(rate);
+  const inteiro = Number.isInteger(numero);
+  const rateBetween = (numero >= 1 && numero <= 5);
+  if ((!inteiro || !rateBetween) && rate) {
+    res.status(400).json({
+      message: 'O campo "rate" deve ser um número inteiro entre 1 e 5',
+    });
+  } else {
+    next();
+  }
+};
+
+const validateQ = async (req, res, next) => {
+  const talker = await readDoc();
+  const { rate, q, date } = req.query;
+  if ((!q || q.length === 0) && !rate && !date) {
+    return res.status(200).json(talker);
+  }
+  next();
+};
+
+const validateWatchedAtByQuery = (req, res, next) => {
+  const { date } = req.query;
+  const data = validateDate(date);
+  if (!data && date) {
+    return res.status(400).json({
+      message: 'O parâmetro "date" deve ter o formato "dd/mm/aaaa"',
+    });
+  }
+  next();
+};
+
 const makeToken = () => {
   const buffer = crypto.randomBytes(8);
   const password = buffer.toString('hex');
@@ -63,6 +107,20 @@ app.get('/talker', async (_req, res) => {
     return res.status(200).json(talkers);
   }
   return [];
+});
+
+app.get('/talker/search',
+validateAuthentication,
+validateRateByQuery,
+validateQ,
+validateWatchedAtByQuery,
+async (req, res) => {
+  const talker = await readDoc();
+  const { rate, q, date } = req.query;
+  const talkerFilter = talker.filter((talkers) => talkers.name.includes(q) || !q);
+  const filtered = talkerFilter.filter((talkers) =>
+  (talkers.talk.rate === Number(rate) || !rate) && (talkers.talk.watchedAt === date || !date));
+  return res.status(200).json(filtered);
 });
 
 app.get('/talker/:id', async (req, res) => {
@@ -114,7 +172,7 @@ async (req, res) => {
     },
   };
   talker.push(newTalker);
-  fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(talker));
+  fs.writeFile(path.resolve(__dirname, CAMINHO), JSON.stringify(talker));
   return res.status(201).json(newTalker);
 });
 
@@ -143,16 +201,37 @@ async (req, res) => {
         } };
     } return talkers;
   });
-  fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(attTalkers));
+  fs.writeFile(path.resolve(__dirname, CAMINHO), JSON.stringify(attTalkers));
   const attTalker = attTalkers.find((e) => e.id === Number(id));
   return res.status(200).json(attTalker);
+});
+
+app.patch('/talker/rate/:id',
+validateAuthentication,
+validateRateByBody,
+validateRateIsDecimalByBody,
+async (req, res) => {
+  const talker = await readDoc();
+  const { rate } = req.body;
+  const { id } = req.params;
+  const newTalker = talker.map((talkers) => {
+    if (talkers.id === Number(id)) {
+      return {
+        ...talkers,
+        talk: {
+          ...talkers.talk,
+          rate } };
+    } return talkers;
+  });
+  fs.writeFile(path.resolve(__dirname, CAMINHO), JSON.stringify(newTalker));
+  return res.status(204).json({});
 });
 
 app.delete('/talker/:id', validateAuthentication, async (req, res) => {
   const talker = await readDoc();
   const { id } = req.params;
   const deleteTalker = talker.filter((e) => e.id !== Number(id));
-  fs.writeFile(path.resolve(__dirname, './talker.json'), JSON.stringify(deleteTalker));
+  fs.writeFile(path.resolve(__dirname, CAMINHO), JSON.stringify(deleteTalker));
   return res.status(204).json({
     deleteTalker,
   });

@@ -132,8 +132,32 @@ const validateRate = (req, res, next) => {
   }
 };
 
+const validateRateByBody = (req, res, next) => {
+  const { rate } = req.body;
+  if (!rate && rate !== 0) {
+    res.status(400).json({
+      message: 'O campo "rate" é obrigatório',
+    });
+  } else {
+    next();
+  }
+};
+
 const validateRateIsDecimal = (req, res, next) => {
   const { talk: { rate } } = req.body;
+  const inteiro = Number.isInteger(rate);
+  const betweenOneAndFive = (rate >= 1 && rate <= 5);
+  if (!inteiro || !betweenOneAndFive) {
+    res.status(400).json({
+      message: 'O campo "rate" deve ser um número inteiro entre 1 e 5',
+    });
+  } else {
+    next();
+  }
+};
+
+const validateRateIsDecimalByBody = (req, res, next) => {
+  const { rate } = req.body;
   const inteiro = Number.isInteger(rate);
   const betweenOneAndFive = (rate >= 1 && rate <= 5);
   if (!inteiro || !betweenOneAndFive) {
@@ -156,4 +180,7 @@ module.exports = {
   validateWatchedAt,
   validateRate,
   validateRateIsDecimal,
+  validateDate,
+  validateRateByBody,
+  validateRateIsDecimalByBody,
 };
